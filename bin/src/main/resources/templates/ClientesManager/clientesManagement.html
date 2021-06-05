@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorator="layout">
+
+<body>
+<th:block layout:fragment="tittle">Listar Clientes</th:block>
+<th:block layout:fragment="content">
+                        <div class="row">
+                            <div class="col-md-8">
+                            <button type="button" class="btn bg-blue btn-labeled heading-btn" onclick="createCliente()">
+                                <i class="icon-plus3 position-left"></i> Agregar
+                            </button>
+                            </div>
+                        </div>
+                        <br/>
+
+
+                        <table id="dtClientes" class="table table-bordered datatable-save-state">
+                            <thead>
+                            <tr>
+                                <th>Id</th>
+                                <th>Nombre</th>
+                                <th>Apellidos</th>
+                                <th>Correo</th>
+
+                                <th class="text-center">Acción</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+
+
+    <div id="modal_default" class="modal fade">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h5 class="modal-title">Cliente</h5>
+                </div>
+
+                <div class="modal-body">
+
+                    <form id="frmModalCliente" class="form-horizontal">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="col-lg-3 control-label">DNI/RUC</label>
+                                    <div class="col-lg-9">
+                                        <input type="text" name="identificador" id="identificador" class="form-control"/>
+
+                                    </div>
+                                </div>
+                        <div class="form-group">
+                            <label class="col-lg-3 control-label">Nombre</label>
+                            <div class="col-lg-9">
+                                <input type="text" name="nombre" id="nombre" class="form-control"/>
+                                <input type="hidden" name="id" id="id"/>
+                                <input type="hidden" name="idCuenta" id="idCuenta"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-3 control-label">Apellidos</label>
+                            <div class="col-lg-9">
+                                <input type="text" name="apellidos" id="apellidos" class="form-control"/>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-lg-3 control-label">Correo</label>
+                            <div class="col-lg-9">
+                                <input type="text" name="correo" id="correo" class="form-control"/>
+                            </div>
+                        </div>
+                         <div class="form-group">
+                                    <label class="col-lg-3 control-label">telefono</label>
+                                    <div class="col-lg-9">
+                                        <input type="text" name="telefono" id="telefono" class="form-control"/>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="col-lg-3 control-label">Es Ruc</label>
+                                    <div class="col-lg-9">
+                                        <div class="checkbox">
+                                            <label>
+                                                <input type="checkbox" id="isRuc" name="isRuc" />
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-lg-3 control-label">Compañia</label>
+                                    <div class="col-lg-9">
+                                        <input type="text" name="company" id="company" class="form-control"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-lg-3 control-label">Estado</label>
+                                    <div class="col-lg-9">
+                                        <select  name="status" id="status" class="form-control">
+                                            <option value="1">Activo</option>
+                                            <option value="0">Inactivo</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-lg-3 control-label">Ciudad</label>
+                                    <div class="col-lg-9">
+                                        <input type="text" name="ciudad" id="ciudad" class="form-control"/>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-lg-3 control-label">Direccion</label>
+                                    <div class="col-lg-9">
+                                        <textarea  class="form-control" rows="3" name="direccion" id="direccion"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-link" data-dismiss="modal">Cerrar</button>
+                    <button type="button" onclick="saveCliente()" class="btn btn-primary">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+<th:block layout:fragment="scripts">
+    <script th:inline="javascript">
+        var dtClientes;
+        $(document).ready(function () {
+            dtClientes = $("#dtClientes").DataTable({
+                columnDefs: [{orderable: !1, dom: "tf", targets: [-1, 0]}],
+                info: !1,
+                language: {paginate: {previous: "&laquo;", next: "&raquo;"}},
+               
+                searching: !1
+            });
+            showListClientes();
+        });
+        var urlContext=/*[[@{/}]]*/;
+        var saveClienteURL = urlContext+"/cliente/save/";
+        var listAllClienteURL = urlContext+'/cliente/listAll';
+        var getByClienteURL = urlContext+"/cliente/getById/";
+        var deleteClienteURL = urlContext+"/cliente/delete/";
+
+        function dropDown(id) {
+            var dropDownTable = '<div class="btn-toolbar" role="toolbar"><div class="btn-group btn-group-sm">'
+                + '<button type="button" onclick="showDetail(' + id + ')" class="btn btn-default"><i class="icon icon-edit"></i></button>'
+                + '<button type="button" onclick="deleteCliente(' + id + ')" class="btn btn-danger"><i class="icon icon-eraser"></i></button>'
+                + '</div></div>';
+
+            return dropDownTable;
+        }
+
+        function createCliente() {
+            resetForm("frmModalCliente");
+            $("#id").val(0);
+            $('#modal_default').modal();
+        }
+
+        function showDetail(id) {
+
+            url = getByClienteURL + id;
+            $.ajax({
+                url: url,
+                dataType: 'json',
+                type: 'GET',
+                before: function () {
+
+                },
+                success: function (data) {
+                    $("#id").val(data.id);
+                    $("#nombre").val(data.nombre);
+                    $("#apellidos").val(data.apellido);
+                    $("#correo").val(data.email);
+                    $("#identificador").val(data.identificador);
+                    $("#company").val(data.company);
+                    $("#telefono").val(data.telefono);
+                    $("#ciudad").val(data.ciudad),
+                    $("#status").val(data.status),
+                    $("#isRuc").prop('checked', integerToBoolean(data.isRuc))
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    alert(jqXHR.statusText);
+                }
+            });
+            $('#modal_default').modal();
+        }
+
+        function saveCliente() {
+            if ($("#id").val() != "") {
+                var id = parseInt($("#id").val());
+            } else
+                var id = 0;
+            sUrl = saveClienteURL + id;
+
+
+            $.ajax({
+                url: sUrl,
+                type: 'post',
+                dataType: 'json',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    id: id,
+                    nombre: $("#nombre").val(),
+                    apellido: $("#apellidos").val(),
+                    email: $("#correo").val(),
+                    identificador: $("#identificador").val(),
+                    company: $("#company").val(),
+                    ciudad: $("#ciudad").val(),
+                    telefono: $("#telefono").val(),
+                    isRuc: setValueCheckType("#isRuc"),
+                    status:$("#status").val(),
+                    direccion: $("#direccion").val()
+                }),
+                beforeSend: function () {
+                    //showLoadingPage();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    //closeLoadingPage();
+                    swal(jqXHR.statusText);
+                },
+                success: function (response) {
+
+                    //closeLoadingPage();
+                    if (response.status == "error") {
+                        mensajeSalida = "";
+                        $.each(response.result,
+                            function (idx, elem) {
+                                mensajeSalida = elem.defaultMessage + "\n" + mensajeSalida;
+                            });
+                        swal("Advertencia", mensajeSalida, "warning");
+
+                    } else {
+                        resetFormCliente();
+                        swal("Éxito",
+                            "Se Guardó con éxito");
+                        showListClientes();
+                        $('#modal_default').modal('hide');
+
+                    }
+                }
+            });
+        }
+
+        function showListClientes() {
+
+            $.ajax({
+                url: listAllClienteURL,
+                dataType: 'json',
+                type: 'GET',
+                before: function () {
+
+                },
+                success: function (data) {
+                    dtClientes.clear().draw();
+                    $.each(data,
+                        function (idx, elem) {
+                            dtClientes.row.add([
+                                elem.id,
+                                elem.nombre,
+                                elem.apellido,
+                                elem.email,
+                                dropDown(elem.id)]).draw();
+                        });
+
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    swal("Error", jqXHR.statusText);
+                }
+            });
+        }
+
+        function deleteCliente(idCliente) {
+
+            swal(
+                {
+                    title: "Desea eliminar el Cliente",
+                    text: "Se borrarán los datos del cliente",
+                    type: "warning",
+                    showLoaderOnConfirm: true,
+                    showCancelButton: true,
+                    confirmButtonColor: "#37474F",
+                    confirmButtonText: "Eliminar",
+                    closeOnConfirm: false
+                },
+                function () {
+                    sUrl = deleteClienteURL + idCliente;
+
+                    $.ajax({
+                        url: sUrl,
+                        type: 'get',
+
+                        beforeSend: function () {
+                            //showLoadingPage();
+                        },
+                        error: function (jqXHR, textStatus,
+                                         errorThrown) {
+                            swal("Error", jqXHR.statusText);
+                        },
+                        success: function (response) {
+
+                            if (response.status == "error") {
+                                setTimeout(function () {
+                                    swal("Error", "No se ha podido Eliminar el Mensaje");
+                                }, 2000);
+                            } else {
+                                console.log("response.status " + response.status)
+                                showListClientes();
+                                resetFormCliente();
+                                setTimeout(
+                                    function () {
+                                        swal("Éxito", response.message);
+                                    }, 2000);
+                                $('#modal_default').modal('hide');
+                            }
+                        }
+                    });
+                });
+        }
+        function setValueCheckType(id){
+            if($(id).prop("checked")){
+                console.log("checkeado");
+                return 1;
+            }else{
+                console.log("no checkeado");
+                return 0;
+            }
+        }
+        function integerToBoolean(value){
+            if(parseInt(value)==1){
+                return true;
+            }else{
+                return false;
+            }
+        }
+        function resetFormCliente() {
+            resetForm("frmModalCliente");
+        }
+    </script>
+
+</th:block>
+</body>
+</html>

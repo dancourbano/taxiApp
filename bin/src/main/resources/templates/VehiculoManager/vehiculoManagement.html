@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorator="layout">
+
+<body>
+
+<th:block layout:fragment="content">
+    <form>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="panel panel-flat">
+                    <div class="panel-heading">
+                        <h6 class="panel-title">vehiculos</h6>
+                        <div class="heading-elements">
+                            <button type="button" class="btn bg-blue btn-labeled heading-btn" onclick="createVehiculo()"><i class="icon-plus3 position-left"></i> Agregar </button>
+
+                        </div>
+                        <a class="heading-elements-toggle"><i class="icon-menu"></i></a></div>
+
+                    <div class="panel-body">
+                        <table id="dtvehiculos" class="table table-bordered datatable-save-state">
+                            <thead>
+                            <tr>
+                                <th>Id</th>
+                                <th>Placa</th>
+                                <th>Modelo</th>
+                                <th>Marca</th>
+                                <th>Servicio</th>
+                                <th>Color</th>
+                                <th class="text-center">Acción</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+            <div class="col-md-6">
+            </div>
+        </div>
+
+    </form>
+
+    <div id="modal_default" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h5 class="modal-title">Vehiculo</h5>
+                </div>
+
+                <div class="modal-body">
+
+                    <form id="frmModalVehiculo" class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-lg-3 control-label">Placa</label>
+                            <div class="col-lg-9">
+                                <input type="text" name="placa" id="placa" class="form-control"/>
+                                <input type="hidden" name="id" id="id"/>
+
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-3 control-label">Modelo</label>
+                            <div class="col-lg-9">
+                                <input type="text" name="modelo" id="modelo" class="form-control" />
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-3 control-label">Marca</label>
+                            <div class="col-lg-9">
+                                <input type="text" name="marca" id="marca" class="form-control"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-3 control-label">Color</label>
+                            <div class="col-lg-9">
+                                <input type="text" name="color" id="color" class="form-control"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-3 control-label">tipo Servicio</label>
+                            <div class="col-lg-9">
+                                <input type="text" name="tipoServicio" id="tipoServicio" class="form-control"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-3 control-label">Estado</label>
+                            <div class="col-lg-9">
+                                <select  name="estado" id="estado" >
+                                    <option value="0">Inactivo</option>
+                                    <option value="1">Activo</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-3 control-label">Turno</label>
+                            <div class="col-lg-9">
+                                <select  name="turno" id="turno" >
+                                    <option value="0">Mañana</option>
+                                    <option value="1">Tarde</option>
+                                    <option value="2">Noche</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-3 control-label">Foto</label>
+                            <div class="col-lg-9">
+                                <input type="text" name="foto" id="foto" class="form-control"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-lg-3 control-label">Conductor</label>
+                            <div class="col-lg-9">
+                                <select  name="conductorId" id="conductorId" >
+
+                                </select>
+                            </div>
+                        </div>
+
+
+                    </form>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-link" data-dismiss="modal">Cerrar</button>
+                    <button type="button" onclick="saveVehiculo()" class="btn btn-primary">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+<th:block layout:fragment="scripts">
+    <script>
+        var dtvehiculos;
+        $(document).ready(function(){
+            dtvehiculos=$("#dtvehiculos").DataTable({columnDefs:[{orderable:!1,dom: "tf",targets:[-1,0]}],info:!1,language:{paginate:{previous:"&laquo;",next:"&raquo;"}},order:[[3,"desc"]],searching:!1});
+            showListvehiculos();
+        });
+        var saveVehiculoURL="/vehiculo/save/";
+        var listAllVehiculoURL="/vehiculo/listAll";
+        var getByVehiculoURL="/vehiculo/getById/";
+        var deleteVehiculoURL="/vehiculo/delete/";
+        function dropDown(id){
+            var dropDownTable='<div class="btn-toolbar" role="toolbar"><div class="btn-group btn-group-sm">'
+                    +'<button type="button" onclick="showDetail('+id+')" class="btn btn-default"><i class="icon icon-edit"></i></button>'
+                    +'<button type="button" onclick="deleteVehiculo('+id+')" class="btn btn-danger"><i class="icon icon-eraser"></i></button>'
+                    +'</div></div>';
+
+            return 	dropDownTable;
+        }
+        function createVehiculo(){
+            resetForm("frmModalVehiculo");
+            $("#id").val(0);
+            $('#modal_default').modal();
+        }
+        function showDetail(id){
+
+            url=getByVehiculoURL+id;
+            $.ajax({
+                url : url,
+                dataType : 'json',
+                type : 'GET',
+                before : function() {
+
+                },
+                success : function(data) {
+                    $("#id").val(data.idVehiculo);
+                    $("#placa").val(data.placa);
+                    $("#modelo").val(data.modelo);
+                    $("#marca").val(data.marca);
+                    $("#")
+                    $("#tipoServicio").val(data.tipo_servicio);
+                    $("#foto").val(data.foto);
+                    $("#color").val(data.color);
+
+                },
+                error : function(jqXHR, textStatus, errorThrown) {
+                    alert(jqXHR.statusText);
+                }
+            });
+            $('#modal_default').modal();
+        }
+        function saveVehiculo(){
+            if ($("#id").val() != "") {
+                var id = parseInt($("#id").val());
+            } else
+                var id = 0;
+            sUrl = saveVehiculoURL+ id;
+
+
+
+            $.ajax({
+                url : sUrl,
+                type : 'put',
+                dataType: 'json',
+                contentType:  'application/json',
+                data : JSON.stringify({
+                    idVehiculo : id,
+                    placa : $("#placa").val(),
+                    modelo : $("#modelo").val(),
+                    marca : $("#marca").val(),
+                    tipo_servicio : $("#tipoServicio").val(),
+                    color : $("#color").val(),
+                    foto : $("#foto").val(),
+
+
+                }),
+                beforeSend : function() {
+                    //showLoadingPage();
+                },
+                error : function(jqXHR, textStatus, errorThrown) {
+                    //closeLoadingPage();
+                    swal(jqXHR.statusText);
+                },
+                success : function(response) {
+
+                    //closeLoadingPage();
+                    if (response.messageType == g_ErrorMessageType) {
+                        swal("Error", response.message, "warning");
+                    } else {
+                        resetFormVehiculo();
+                        swal("Éxito",
+                                "Se Actualizó con éxito");
+                        showListvehiculos();
+                        $('#modal_default').modal('hide');
+
+                    }
+                }
+            });
+        }
+
+        function showListvehiculos(){
+
+            $.ajax({
+                url : listAllVehiculoURL,
+                dataType : 'json',
+                type : 'GET',
+                before : function() {
+
+                },
+                success : function(data) {
+                    dtvehiculos.clear().draw();
+                    $.each(data,
+                            function(idx, elem) {
+                                dtvehiculos.row.add([
+                                    elem.idVehiculo,
+                                    elem.placa,
+                                    elem.modelo,
+                                    elem.marca,
+                                    elem.tipo_servicio,
+                                    elem.color,
+                                    dropDown(elem.idVehiculo)]).draw();
+                            });
+
+                },
+                error : function(jqXHR, textStatus, errorThrown) {
+                    swal("Error",jqXHR.statusText);
+                }
+            });
+        }
+
+        function deleteVehiculo(idVehiculo){
+
+            swal(
+                    {
+                        title : "Desea eliminar el Vehiculo",
+                        text : "Se borrarán los datos del Vehiculo",
+                        type : "warning",
+                        showLoaderOnConfirm : true,
+                        showCancelButton : true,
+                        confirmButtonColor : "#37474F",
+                        confirmButtonText : "Eliminar",
+                        closeOnConfirm : false
+                    },
+                    function() {
+                        sUrl = deleteVehiculoURL+idVehiculo;
+
+                        $
+                                .ajax({
+                                    url : sUrl,
+                                    type : 'get',
+                                    dataType : 'json',
+                                    beforeSend : function() {
+                                        //showLoadingPage();
+                                    },
+                                    error : function(jqXHR, textStatus,
+                                                     errorThrown) {
+                                        swal("Error",jqXHR.statusText);
+                                    },
+                                    success : function(response) {
+                                        if (response.messageType == g_ErrorMessageType) {
+                                            setTimeout(function() {
+                                                swal("Error","No se ha podido Eliminar el Mensaje");
+                                            }, 2000);
+                                        } else {
+
+                                            showListvehiculos();
+                                            resetFormVehiculo();
+                                            setTimeout(
+                                                    function() {
+                                                        swal("Éxito",response.message);
+                                                    }, 2000);
+                                            $('#modal_default').modal('hide');
+                                        }
+                                    }
+                                });
+                    });
+        }
+        function resetFormVehiculo(){
+            resetForm("frmModalVehiculo");
+        }
+    </script>
+
+</th:block>
+</body>
+</html>
